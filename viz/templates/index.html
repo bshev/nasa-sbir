@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>NASA SBIR/STTR Topics</title>
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, sans-serif;
+      font-size: 14px;
+      background: #f5f5f4;
+      color: #1c1917;
+    }
+
+    header {
+      background: #7f1d1d;
+      color: #fff;
+      padding: 12px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    header h1 {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: .03em;
+    }
+
+    #count {
+      font-size: 12px;
+      color: #aab;
+      margin-left: auto;
+    }
+
+    .shell {
+      display: flex;
+      height: calc(100vh - 45px);
+      overflow: hidden;
+    }
+
+    /* Sidebar */
+    #sidebar {
+      width: 210px;
+      min-width: 210px;
+      background: #fff;
+      border-right: 1px solid #dde;
+      display: flex;
+      flex-direction: column;
+      padding: 12px;
+      gap: 8px;
+      overflow-y: auto;
+    }
+
+    #sidebar label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #667;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    #sidebar input,
+    #sidebar select {
+      width: 100%;
+      padding: 6px 8px;
+      border: 1px solid #dde;
+      border-radius: 4px;
+      font-size: 13px;
+      background: #f9f9fb;
+    }
+
+    #sidebar input:focus,
+    #sidebar select:focus {
+      outline: none;
+      border-color: #d97706;
+    }
+
+    #clear-btn {
+      margin-top: 4px;
+      padding: 6px;
+      border: 1px solid #dde;
+      border-radius: 4px;
+      background: #f4f5f7;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    #clear-btn:hover {
+      background: #e8e9ec;
+    }
+
+    /* Topic list */
+    #list-pane {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .topic-card {
+      background: #fff;
+      border: 1px solid #dde;
+      border-radius: 6px;
+      padding: 10px 14px;
+      cursor: pointer;
+      transition: border-color .15s;
+    }
+
+    .topic-card:hover {
+      border-color: #d97706;
+    }
+
+    .topic-card.selected {
+      border-color: #d97706;
+      background: #fef3c7;
+    }
+
+    .card-code {
+      font-size: 11px;
+      font-weight: 700;
+      color: #d97706;
+      letter-spacing: .04em;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 500;
+      margin: 2px 0;
+    }
+
+    .card-meta {
+      font-size: 11px;
+      color: #778;
+    }
+
+    /* Detail pane */
+    #detail-pane {
+      width: 1100px;
+      min-width: 400px;
+      background: #fff;
+      border-left: 1px solid #dde;
+      overflow-y: auto;
+      padding: 16px;
+      display: none;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    #detail-pane.open {
+      display: flex;
+    }
+
+    #detail-pane h2 {
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    #detail-pane .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px 12px;
+    }
+
+    #detail-pane .meta-item label {
+      font-size: 10px;
+      font-weight: 700;
+      color: #667;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      display: block;
+    }
+
+    #detail-pane .meta-item span {
+      font-size: 13px;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: #667;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      border-top: 1px solid #eee;
+      padding-top: 10px;
+    }
+
+    .section-body {
+      font-size: 13px;
+      line-height: 1.6;
+      color: #333;
+      white-space: pre-wrap;
+    }
+
+    #detail-close {
+      align-self: flex-end;
+      font-size: 11px;
+      padding: 4px 10px;
+      border: 1px solid #dde;
+      border-radius: 4px;
+      background: #f4f5f7;
+      cursor: pointer;
+    }
+
+    .empty {
+      color: #aab;
+      font-size: 13px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    #spinner {
+      display: none;
+      color: #aab;
+      font-size: 13px;
+      padding: 20px;
+      text-align: center;
+    }
+
+    /* Score stars */
+    .card-score {
+      display: inline-flex;
+      gap: 2px;
+      margin-top: 5px;
+    }
+
+    .card-score button {
+      background: none;
+      border: none;
+      padding: 0;
+      font-size: 16px;
+      cursor: pointer;
+      color: #ddd;
+      line-height: 1;
+    }
+
+    .card-score button.active {
+      color: #f59e0b;
+    }
+
+    .card-score:hover button {
+      color: #f59e0b;
+    }
+
+    .card-score button:hover ~ button {
+      color: #ddd;
+    }
+
+    /* Detail score row */
+    .detail-score {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .detail-score label {
+      font-size: 10px;
+      font-weight: 700;
+      color: #667;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+    }
+
+    .detail-score .stars button {
+      background: none;
+      border: none;
+      padding: 0;
+      font-size: 20px;
+      cursor: pointer;
+      color: #ddd;
+      line-height: 1;
+    }
+
+    .detail-score .stars button.active {
+      color: #f59e0b;
+    }
+
+    .detail-score .stars:hover button {
+      color: #f59e0b;
+    }
+
+    .detail-score .stars button:hover ~ button {
+      color: #ddd;
+    }
+
+    .clear-score {
+      font-size: 11px;
+      color: #aab;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .clear-score:hover {
+      color: #667;
+    }
+
+    #export-md-btn {
+      font-size: 11px;
+      padding: 4px 10px;
+      border: 1px solid #d97706;
+      border-radius: 4px;
+      background: #fef3c7;
+      color: #d97706;
+      cursor: pointer;
+    }
+
+    #export-md-btn:hover {
+      background: #fde68a;
+    }
+  </style>
+</head>
+
+<body>
+
+  <header>
+    <h1>NASA SBIR/STTR Open Topics</h1>
+    <span id="count"></span>
+  </header>
+
+  <div class="shell">
+    <!-- Sidebar filters -->
+    <aside id="sidebar">
+      <label>Search</label>
+      <input id="q" type="search" placeholder="topic ID, title, keyword…">
+
+      <label>Program</label>
+      <select id="filter-program">
+        <option value="">All</option>
+        {% for p in filters.programs %}<option value="{{ p }}">{{ p }}</option>{% endfor %}
+      </select>
+
+      <label>Score</label>
+      <select id="filter-score">
+        <option value="">All</option>
+        <option value="none">No score only</option>
+        <option value="1">★ 1+</option>
+        <option value="2">★★ 2+</option>
+        <option value="3">★★★ 3+</option>
+        <option value="4">★★★★ 4+</option>
+        <option value="5">★★★★★ 5 only</option>
+      </select>
+
+      <label>Sort by</label>
+      <select id="sort-col">
+        <option value="topic_id">Topic ID</option>
+        <option value="title">Title</option>
+        <option value="program">Program</option>
+        <option value="trl_range">TRL Range</option>
+        <option value="score">Score</option>
+      </select>
+      <select id="sort-dir">
+        <option value="asc">Ascending</option>
+        <option value="desc">Descending</option>
+      </select>
+
+      <button id="clear-btn">Clear filters</button>
+    </aside>
+
+    <!-- Topic list -->
+    <main id="list-pane">
+      <div id="spinner">Loading…</div>
+      <div id="topic-list"></div>
+    </main>
+
+    <!-- Detail pane -->
+    <aside id="detail-pane">
+      <div style="display:flex;gap:8px;align-self:flex-end">
+        <button id="export-md-btn">↓ Export .md</button>
+        <button id="detail-close">✕ Close</button>
+      </div>
+      <div id="detail-content"></div>
+    </aside>
+  </div>
+
+  <script>
+    let debounce_t;
+    let allTopics = [];
+
+    function sortTopics(topics) {
+      const col = document.getElementById("sort-col").value;
+      const dir = document.getElementById("sort-dir").value === "asc" ? 1 : -1;
+      return [...topics].sort((a, b) => {
+        const av = (a[col] || "").toString().toLowerCase();
+        const bv = (b[col] || "").toString().toLowerCase();
+        return av < bv ? -dir : av > bv ? dir : 0;
+      });
+    }
+
+    function renderList(topics) {
+      const list = document.getElementById("topic-list");
+      list.innerHTML = "";
+      if (!topics.length) { list.innerHTML = '<div class="empty">No topics found.</div>'; return; }
+      topics.forEach(t => {
+        const card = document.createElement("div");
+        card.className = "topic-card";
+        card.dataset.id = t.topic_id;
+        card.innerHTML = `
+          <div class="card-code">${t.topic_id || ""}</div>
+          <div class="card-title">${t.title || "(no title)"}</div>
+          <div class="card-meta">${[t.program, t.lead_center].filter(Boolean).join(" · ")}</div>
+          <div class="card-meta">${t.need_horizon || ""}</div>
+          <div class="card-score">${starsHtml(t.topic_id, t.score)}</div>`;
+        card.onclick = e => { if (!e.target.closest('button')) openDetail(t.topic_id); };
+        list.appendChild(card);
+      });
+    }
+
+    function loadTopics() {
+      clearTimeout(debounce_t);
+      debounce_t = setTimeout(_load, 250);
+    }
+
+    async function _load() {
+      const scoreVal = document.getElementById("filter-score").value;
+      const p = new URLSearchParams({
+        q:         document.getElementById("q").value,
+        program:   document.getElementById("filter-program").value,
+        min_score: scoreVal === "none" ? "" : scoreVal,
+        no_score:     scoreVal === "none" ? "1" : "",
+      });
+      document.getElementById("spinner").style.display = "block";
+      document.getElementById("topic-list").innerHTML = "";
+      const res = await fetch("/api/topics?" + p);
+      allTopics = await res.json();
+      document.getElementById("spinner").style.display = "none";
+      document.getElementById("count").textContent = `${allTopics.length} topics`;
+      renderList(sortTopics(allTopics));
+    }
+
+    // --- Score ---
+    function starsHtml(id, score) {
+      return [1,2,3,4,5].map(n =>
+        `<button class="${score >= n ? 'active' : ''}" onclick="saveScore(event,'${id}',${n})" title="${n}">★</button>`
+      ).join("");
+    }
+
+    async function saveScore(e, id, val) {
+      e.stopPropagation();
+      const current = allTopics.find(t => t.topic_id === id)?.score;
+      const newScore = current === val ? null : val;
+      await fetch(`/api/topic/${encodeURIComponent(id)}/score`, {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({score: newScore}),
+      });
+      allTopics = allTopics.map(t => t.topic_id === id ? {...t, score: newScore} : t);
+      const card = document.querySelector(`.topic-card[data-id="${id}"] .card-score`);
+      if (card) card.innerHTML = starsHtml(id, newScore);
+      const detailStars = document.querySelector("#detail-score-stars");
+      if (detailStars && detailStars.dataset.id === id) detailStars.innerHTML = starsHtml(id, newScore);
+    }
+
+    // --- Detail ---
+    async function openDetail(id) {
+      const res = await fetch(`/api/topic/${encodeURIComponent(id)}`);
+      const t = await res.json();
+      const pane = document.getElementById("detail-pane");
+      pane.classList.add("open");
+      document.querySelectorAll(".topic-card").forEach(c => c.classList.toggle("selected", c.dataset.id === id));
+      currentDetail = t;
+      document.getElementById("detail-content").innerHTML = renderDetail(t);
+    }
+
+    function renderDetail(t) {
+      const meta = (label, val) => `<div class="meta-item"><label>${label}</label><span>${val != null && val !== "" ? val : "—"}</span></div>`;
+      const sec  = (label, val) => val ? `<div class="section-title">${label}</div><div class="section-body">${val}</div>` : "";
+      return `
+        <h2>${t.title || "(no title)"}</h2>
+        <div class="detail-score">
+          <label>Score</label>
+          <div class="stars" id="detail-score-stars" data-id="${t.topic_id}">${starsHtml(t.topic_id, t.score)}</div>
+        </div>
+        <div class="meta-grid">
+          ${meta("Topic ID", t.topic_id)}
+          ${meta("Lead Center", t.lead_center)}
+          ${meta("Program", t.program)}
+          ${meta("Participating Centers", t.participating_centers)}
+          ${meta("TRL Range", t.trl_range)}
+          ${meta("Need Horizon", t.need_horizon)}
+        </div>
+        ${sec("Subtopic Description", t.subtopic_description)}
+        ${sec("Phase I Deliverables", t.phase_i_deliverables)}
+        ${sec("Phase II Deliverables", t.phase_ii_deliverables)}
+        ${sec("State of the Art", t.state_of_the_art)}
+        ${sec("Critical Gaps", t.critical_gaps)}
+        ${sec("Shortfalls and Decadal Surveys", t.shortfalls_and_decadal_surveys)}
+        ${sec("Scope and Objectives", t.scope_and_objectives)}
+        ${sec("Phase II Deliverable Types", t.phase_ii_deliverable_types)}
+        ${sec("References", t.references)}
+      `;
+    }
+
+    let currentDetail = null;
+
+    function topicToMd(t) {
+      const line = (label, val) => val != null && val !== "" ? `**${label}:** ${val}\n` : "";
+      const sec  = (label, val) => val ? `\n## ${label}\n\n${val}\n` : "";
+      const stars = t.score ? "★".repeat(t.score) + "☆".repeat(5 - t.score) : "—";
+      return [
+        `# ${t.title || "(no title)"}`,
+        "",
+        line("Topic ID", t.topic_id),
+        line("Program", t.program),
+        line("Lead Center", t.lead_center),
+        line("Participating Centers", t.participating_centers),
+        line("TRL Range", t.trl_range),
+        line("Need Horizon", t.need_horizon),
+        line("Score", stars),
+        sec("Subtopic Description", t.subtopic_description),
+        sec("Scope and Objectives", t.scope_and_objectives),
+        sec("State of the Art", t.state_of_the_art),
+        sec("Critical Gaps", t.critical_gaps),
+        sec("Shortfalls and Decadal Surveys", t.shortfalls_and_decadal_surveys),
+        sec("Phase I Deliverables", t.phase_i_deliverables),
+        sec("Phase II Deliverables", t.phase_ii_deliverables),
+        sec("Phase II Deliverable Types", t.phase_ii_deliverable_types),
+        sec("References", t.references),
+      ].join("");
+    }
+
+    document.getElementById("export-md-btn").onclick = () => {
+      if (!currentDetail) return;
+      const md = topicToMd(currentDetail);
+      const blob = new Blob([md], {type: "text/markdown"});
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `${currentDetail.topic_id || "topic"}.md`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    };
+
+    document.getElementById("detail-close").onclick = () => {
+      document.getElementById("detail-pane").classList.remove("open");
+      document.querySelectorAll(".topic-card").forEach(c => c.classList.remove("selected"));
+    };
+
+    // --- Filters & sort ---
+    ["q", "filter-program", "filter-score"].forEach(id => {
+      document.getElementById(id).addEventListener("input", loadTopics);
+    });
+
+    ["sort-col", "sort-dir"].forEach(id => {
+      document.getElementById(id).addEventListener("change", () => renderList(sortTopics(allTopics)));
+    });
+
+    document.getElementById("clear-btn").onclick = () => {
+      ["q", "filter-program", "filter-score"].forEach(id => {
+        document.getElementById(id).value = "";
+      });
+      loadTopics();
+    };
+
+    loadTopics();
+  </script>
+</body>
+
+</html>
