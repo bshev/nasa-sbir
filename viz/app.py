@@ -6,7 +6,7 @@ from loguru import logger
 
 _HERE       = os.path.dirname(os.path.abspath(__file__))
 DB_PATH     = os.environ.get("DB_PATH",     os.path.join(_HERE, "..", "data", "topics.db"))
-SCORES_PATH = os.environ.get("SCORES_PATH", os.path.join(_HERE, "..", "scores.db"))
+SCORES_PATH = os.environ.get("SCORES_PATH", os.path.join(_HERE, "..", "data", "scores.db"))
 app = Flask(__name__)
 
 
@@ -67,7 +67,7 @@ def api_topics():
     sql = f"""
         SELECT t.topic_id, t.title, t.program, t.lead_center,
                t.participating_centers, t.trl_range, t.need_horizon,
-               s.score
+               s.score, s.keywords, s.objective
         FROM topics t
         LEFT JOIN sdb.scores s ON s.topic_id = t.topic_id
         WHERE {" AND ".join(where)}
@@ -80,7 +80,7 @@ def api_topics():
 @app.route("/api/topic/<path:topic_id>")
 def api_topic(topic_id):
     sql = """
-        SELECT t.*, s.score
+        SELECT t.*, s.score, s.keywords, s.objective
         FROM topics t
         LEFT JOIN sdb.scores s ON s.topic_id = t.topic_id
         WHERE t.topic_id = ?

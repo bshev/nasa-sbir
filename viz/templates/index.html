@@ -475,7 +475,7 @@
 
     function renderDetail(t) {
       const meta = (label, val) => `<div class="meta-item"><label>${label}</label><span>${val != null && val !== "" ? val : "—"}</span></div>`;
-      const sec  = (label, val) => val ? `<div class="section-title">${label}</div><div class="section-body">${val}</div>` : "";
+      const sec  = (label, val) => `<div class="section-title">${label}</div><div class="section-body">${val != null && val !== "" ? val : "—"}</div>`;
       return `
         <h2>${t.title || "(no title)"}</h2>
         <div class="detail-score">
@@ -490,6 +490,8 @@
           ${meta("TRL Range", t.trl_range)}
           ${meta("Need Horizon", t.need_horizon)}
         </div>
+        ${sec("Keywords", t.keywords)}
+        ${sec("Objective", t.objective)}
         ${sec("Subtopic Description", t.subtopic_description)}
         ${sec("Phase I Deliverables", t.phase_i_deliverables)}
         ${sec("Phase II Deliverables", t.phase_ii_deliverables)}

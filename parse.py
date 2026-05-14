@@ -1,9 +1,14 @@
 """
-Parse NASA SBIR/STTR BAA topic PDFs into a CSV.
-Each row = one topic. Columns are inferred from document structure.
+Parse NASA SBIR/STTR BAA topic PDFs into a SQLite database (topics.db).
+Each row is one topic; columns map to structured fields and free-text sections
+extracted from the document layout.
 
-Usage: python nasa_pdf_to_csv.py [directory]
-Defaults to ./test_data. Output: topics.csv in the same directory.
+Data source: https://www.nasa.gov/sbir_sttr/phase-i/
+PDFs are cropped to remove the front-matter / instructions pages so that only
+the topic listings remain before being placed in ./data.
+
+Usage: python parse.py [directory]
+Defaults to ./data. Output: topics.db in the same directory.
 """
 
 import sys
@@ -12,6 +17,8 @@ import sqlite3
 from pathlib import Path
 import pdfplumber
 from loguru import logger
+
+logger.add(sys.stdout, format="{time:HH:mm:ss} | {level} | {message}", level="DEBUG", colorize=True)
 
 
 # ── Patterns ────────────────────────────────────────────────────────────────
@@ -62,7 +69,7 @@ SECTION_MAP = {
     "critical gaps":                          "critical_gaps",
     "shortfalls and decadal surveys":         "shortfalls_and_decadal_surveys",
     "references":                             "references",
-    # captured but not written to a column
+    # recognized so the parser doesn't treat it as body text, but not stored
     "primary technology taxonomy":            None,
 }
 
@@ -91,16 +98,11 @@ def is_noise(line: str) -> bool:
 
 
 def normalize(text: str) -> str:
-    """Collapse internal whitespace."""
     return re.sub(r"\s+", " ", text).strip()
 
 
 def join_title(existing: str, fragment: str) -> str:
-    """
-    Append a title continuation fragment, handling PDF hard-hyphen line breaks.
-    If existing ends with '-', it was a mid-word break: join directly.
-    Otherwise insert a space.
-    """
+    """Join a wrapped title fragment, collapsing hard-hyphen line breaks."""
     if existing.endswith("-"):
         return existing + fragment
     return existing + " " + fragment
@@ -111,8 +113,8 @@ def join_title(existing: str, fragment: str) -> str:
 def split_topics(lines: list, program: str) -> list:
     topics = []
     topic = None
-    current_col = None      # CSV column currently accumulating
-    section_buf = []        # lines for current section
+    current_col = None
+    section_buf = []
 
     def flush():
         if topic is not None and current_col and section_buf:
@@ -134,7 +136,7 @@ def split_topics(lines: list, program: str) -> list:
         current_col = None
         section_buf.clear()
 
-    title_open = False   # True while title is still wrapping
+    title_open = False   # PDF topic titles occasionally wrap to the next line
 
     for raw in lines:
         if is_noise(raw):
@@ -152,7 +154,6 @@ def split_topics(lines: list, program: str) -> list:
         m = RE_TOPIC_ID.match(stripped)
         if m:
             start_topic(m.group(1), m.group(2))
-            # Title is open if the fragment doesn't yet close with ")"
             title_open = not m.group(2).strip().endswith(")")
             continue
 
